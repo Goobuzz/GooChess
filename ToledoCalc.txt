@@ -1,0 +1,22 @@
+ToledoPos => GooChessPos
+
+the decadic number corresponds to the file ( row )
+the single number corresponds to the rank ( column )
+
+91 => file=0 rank=0  ( bottom left rook )
+81 => file=1 rank=0  ( bottom left pawn infront of rook )
+92 => file=0 rank=1  ( bottom left knight )
+82 => file=1 rank=1  ( bottom left pawn infront of knight )
+
+83 => file=1 rank=2  ( bottom left pawn infront of bishop )
+
+28 => file=7 rank=7  ( top right rook )
+
+
+Examples:
+
+
+ToledoPos for file=7 rank=7 would be: (9-file)*10 + rank+1
+
+
+File and rank for ToledoPos 28 would be: file = 9- Math.floor(t/10)  and rank = (t%10)-1

@@ -1,0 +1,108 @@
+
+// Include this https://labs.gooengine.com/goochess/js/ToledoChess2.js
+
+function mod(v, n) {
+	return (v % n + n) % n;
+}
+
+function getParent( ent, times) {
+	for( var i=0; i<times; i++) {
+		if( ent.transformComponent.parent)
+			ent = ent.transformComponent.parent.entity;
+	}
+	return ent;
+}
+
+function getToledoChessPos( x, z) {
+	x = x - mod(x, 2.5) + 1.25;
+	z = z - mod(z, 2.5) + 1.25;
+	x = (x / 1.25 + 7)/2;
+	z = (-z / 1.25 + 7)/2;
+	return (9-z)*10 + x+1;
+}
+
+function get3DPos( toledoChessPos ) {
+	var t = toledoChessPos;
+	var file = 9 - Math.floor(t/10);
+	var rank = (t%10)-1
+	var x = (rank*2-7)*1.25;
+	var z = -(file*2-7)*1.25;
+	return [ x, 1, z ];
+}
+
+function containsPoint( box, point) {
+	return  box.center.x + box.xExtent > point[0] && box.center.x - box.xExtent < point[0] &&
+			box.center.y + box.yExtent > point[1] && box.center.y - box.yExtent < point[1] &&
+			box.center.z + box.zExtent > point[2] && box.center.z - box.zExtent < point[2];
+}
+
+function getEntityAt( ctx, point) {
+	var found;
+	ctx.world.getEntities().forEach(function(entity) {
+		if( entity.meshRendererComponent && containsPoint( entity.meshRendererComponent.worldBound, point)) {
+			if( entity.name != 'Torus')
+				found = entity;
+		}
+	});
+	return found;
+}
+
+var setup = function(args, ctx, goo) {
+	
+	var toledoChess = getToledoChess();
+	toledoChess.aiCallback = function(player, from, to) {
+		console.log( player, from, to);
+		
+		var fromPiece = getParent( getEntityAt( ctx, get3DPos( from)), 2);
+		var to3D = get3DPos( to);
+		
+		var toEntity = getEntityAt( ctx, to3D);
+		if( toEntity) {
+			getParent( toEntity, 2).removeFromWorld();						
+		}
+		
+		to3D[1] = 0.5;
+		ctx.world.by.name('Torus').first().setTranslation(to3D);
+		to3D[1] = fromPiece.getTranslation().y;
+		fromPiece.setTranslation( to3D);
+
+	}
+
+	ctx.worldData.mc = function (e) {
+		ctx.world.gooRunner.pick( e.offsetX, e.offsetY, function (index, depth) {
+			if( index < 0)
+				return;
+
+			var clicked = ctx.world.entityManager.getEntityByIndex(index);
+			if( clicked.name == 'Board') { // board
+				var camera = ctx.activeCameraEntity.cameraComponent.camera;
+				var pos = camera.getWorldPosition( e.offsetX, e.offsetY, ctx.viewportWidth, ctx.viewportHeight, depth);
+
+				toledoChess.OnClick( getToledoChessPos( pos.x, pos.z));
+				
+				pos.x = pos.x - mod(pos.x, 2.5) + 1.25;
+				pos.y = 0.5;
+				pos.z = pos.z - mod(pos.z, 2.5) + 1.25;
+				ctx.world.by.name('Torus').first().setTranslation(pos);
+				
+			} else {
+				var s = getParent( clicked, 2);
+				var t = s.getTranslation();
+				toledoChess.OnClick( getToledoChessPos(t.x, t.z));
+				ctx.world.by.name('Torus').first().setTranslation( t.x, 0.5, t.z);
+				
+				//entity.meshRendererComponent.materials[0].uniforms.materialAmbient = [1,0,0,0];
+			}
+		});	
+	}
+	document.body.addEventListener('mousedown', ctx.worldData.mc, false);
+};
+
+var cleanup = function(args, ctx, goo) {
+	document.body.removeEventListener('mousedown', ctx.worldData.mc, false);
+};
+
+var update = function(args, ctx, goo) {
+};
+
+var parameters = [];
