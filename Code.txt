@@ -67,6 +67,20 @@ var setup = function(args, ctx, goo) {
 		fromPiece.setTranslation( to3D);
 
 	}
+	
+	toledoChess.checkmateCallback = function(player) {
+		var cm = ctx.world.by.name('Checkmate').first();
+		cm.hidden = false;
+		cm.htmlComponent.hidden = false;
+		var text;
+		if(player>0) {
+			text = '<p style="background:white; font-size:18px;padding:4px;margin:0;border-radius:3px">Checkmate, you won !</p>';
+		} else {
+			text = '<p style="background:white; font-size:18px;padding:4px;margin:0;border-radius:3px">Checkmate, you lost !</p>';
+		}
+		cm.htmlComponent.domElement.innerHTML = text;
+
+	}
 
 	ctx.worldData.mc = function (e) {
 		ctx.world.gooRunner.pick( e.offsetX, e.offsetY, function (index, depth) {
